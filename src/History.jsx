@@ -6,7 +6,7 @@ import { copyText, fmtDate, Badge, CritTag, Callout, Segmented, copyRich, CopyBu
 import { STEPS, CARRIERS, StepDemandeur, Step1, Step2, Step3, Step4, Checklist, orgaRules, ORGA_INFO, Step5, Step6, TrackingFields, Step7 } from "./steps.jsx";
 
 // ---------- historique
-function History({ dossiers, loading, highlight, onRelaunch, onNew, onResume, ask, onSaveTracking, onDelete }) {
+function History({ dossiers, loading, highlight, onRelaunch, onNew, onResume, ask, onSaveTracking, onDelete, onEdit }) {
   const [open, setOpen] = useState(highlight || null);
   const [edits, setEdits] = useState({});
   const [saved, setSaved] = useState(null);
@@ -48,6 +48,7 @@ function History({ dossiers, loading, highlight, onRelaunch, onNew, onResume, as
                 <span className="h-sum">
                   {dr.lines.length} vin{dr.lines.length > 1 ? "s" : ""}
                   {critD.length ? " pour " + critD.map((c) => CRITIQUES[c].nom).join(" et ") : ", critiques à choisir"}
+                  {dr.editing && <span className="h-by">Modification du dossier du {fmtDate(dr.editing.createdAt)}</span>}
                   <span className="h-by">par {d.createdBy || "demandeur non renseigné"}</span>
                 </span>
                 <span className="h-pdm">Étape {dr.step} sur {STEPS.length}</span>
@@ -121,7 +122,16 @@ function History({ dossiers, loading, highlight, onRelaunch, onNew, onResume, as
                   </Callout>
                 )}
                 <div className="h-foot">
+                  <button type="button" className="link-btn link-danger" onClick={() =>
+                    ask({
+                      title: "Supprimer ce dossier ?",
+                      message: "Le dossier et son suivi seront définitivement supprimés de l'historique, pour tous les postes.",
+                      okLabel: "Supprimer", danger: true,
+                      onOk: () => onDelete(d),
+                    })
+                  }>Supprimer le dossier</button>
                   {saved === d.id && <span className="foot-msg ok">Suivi enregistré</span>}
+                  <button type="button" className="btn" onClick={() => onEdit(d)}>Modifier la demande</button>
                   <button type="button" className="btn btn-primary" disabled={!Object.keys(e).length} onClick={() => saveTracking(d)}>
                     Enregistrer le suivi
                   </button>

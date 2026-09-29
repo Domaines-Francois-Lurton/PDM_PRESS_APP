@@ -342,13 +342,52 @@ function dossierStatut(d) {
   return { label: "En préparation", tone: "neutral" };
 }
 
+// Reconstruit l'état de l'assistant à partir d'un dossier enregistré (pour le modifier).
+// Source de vérité : les PDM et les vins bloqués du dossier (le suivi des colis y est à jour).
+function dossierToDraft(d) {
+  const items = [...(d.pdms || []).flatMap((p) => p.items || []), ...(d.blocked || [])].filter((it) => CAT[it.wineId]);
+  const lines = [];
+  const seen = {};
+  items.forEach((it) => {
+    if (seen[it.uid]) return;
+    seen[it.uid] = true;
+    lines.push({ uid: it.uid, wineId: it.wineId, vintage: it.vintage || "", comment: it.comment || "" });
+  });
+  if (Array.isArray(d.lineOrder)) {
+    const pos = Object.fromEntries(d.lineOrder.map((u, i) => [u, i]));
+    lines.sort((a, b) => (pos[a.uid] ?? 1e9) - (pos[b.uid] ?? 1e9));
+  }
+  const critiques = { WS: items.some((i) => i.critique === "WS"), WE: items.some((i) => i.critique === "WE") };
+  const excl = {};
+  lines.forEach((l) =>
+    ["WS", "WE"].forEach((c) => {
+      if (critiques[c] && !items.some((i) => i.uid === l.uid && i.critique === c)) excl[l.uid + "|" + c] = true;
+    })
+  );
+  const cola = {};
+  (d.pdms || []).forEach((p) => {
+    if (DESTINATIONS[p.dest] && DESTINATIONS[p.dest].zone === "US") (p.items || []).forEach((i) => (cola[i.uid] = "oui"));
+  });
+  (d.blocked || []).forEach((b) => (cola[b.uid] = "non"));
+  const tracking = Object.fromEntries((d.pdms || []).map((p) => [p.id, p.tracking || { carrier: "", number: "", date: "" }]));
+  const [prenom, ...rest] = (d.createdBy || "").split(" ");
+  return {
+    ...emptyDraft(),
+    prenom: prenom || "", nom: rest.join(" "),
+    origines: [...new Set(lines.map((l) => CAT[l.wineId].f))],
+    lines, critiques, excl, cola, check: d.check || {}, tracking,
+    step: 1, max: 8,
+    editing: { id: d.id, createdAt: d.createdAt, createdBy: d.createdBy || "", relanceId: d.relanceId || null },
+  };
+}
+
 function uid() {
   return "l" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
 function emptyDraft() {
   return {
-    id: null, prenom: "", nom: "", relance: null,
+    id: null, prenom: "", nom: "", relance: null, editing: null,
     step: 1, max: 1, origines: [], lines: [],
     critiques: { WS: false, WE: false }, excl: {}, cola: {}, check: {}, langs: {}, tracking: {},
   };
@@ -383,4 +422,5 @@ export {
   dossierStatut,
   uid,
   emptyDraft,
+  dossierToDraft,
 };

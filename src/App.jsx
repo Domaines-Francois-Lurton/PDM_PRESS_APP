@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { CAT, buildPdms, emptyDraft, requesterName, uid } from "./logic.js";
+import { CAT, buildPdms, emptyDraft, dossierToDraft, requesterName, uid } from "./logic.js";
 import { ConfirmDialog, Callout } from "./ui.jsx";
 import Login from "./Login.jsx";
 import Wizard from "./Wizard.jsx";
@@ -85,7 +85,7 @@ export default function App() {
   };
 
   const names = [...new Set(dossiers.map((d) => d.createdBy).filter(Boolean))];
-  const hasWork = draft.lines.length > 0 || requesterName(draft);
+  const hasWork = draft.lines.length > 0 || requesterName(draft) || draft.editing;
   const ask = (opts) => setConfirmState(opts);
   const guard = (action) => {
     if (!hasWork) return action();
@@ -113,11 +113,17 @@ export default function App() {
   const save = async () => {
     const { pdms, blocked } = buildPdms(draft, true);
     pdms.forEach((p) => (p.tracking = draft.tracking[p.id] || { carrier: "", number: "", date: "" }));
-    const id = newId("d");
+    const ed = draft.editing;
+    const id = ed ? ed.id : newId("d");
     const now = new Date().toISOString();
-    const d = { id, createdAt: now, updatedAt: now, createdBy: requesterName(draft), pdms, blocked, check: draft.check };
+    const d = {
+      id, createdAt: ed ? ed.createdAt : now, updatedAt: now, createdBy: requesterName(draft),
+      pdms, blocked, check: draft.check,
+      lineOrder: draft.lines.map((l) => l.uid), // ordre de saisie des vins, repris en cas de modification
+    };
+    if (ed && ed.relanceId) d.relanceId = ed.relanceId;
     const relanceFromId = draft.relance && dossiers.some((x) => x.id === draft.relance.fromId) ? draft.relance.fromId : null;
-    const replaceId = draft.id && dossiers.some((x) => x.id === draft.id) ? draft.id : null;
+    const replaceId = draft.id && draft.id !== id && dossiers.some((x) => x.id === draft.id) ? draft.id : null;
     const ok = await run(
       () => saveFinalDossier(d, { replaceId, relanceFromId }),
       "Le dossier n'a pas pu être enregistré. Votre saisie est conservée, réessayez."
@@ -130,9 +136,24 @@ export default function App() {
 
   const saveTrackingFor = (d, pdms) => run(() => updateTracking(d.id, pdms), "Le suivi n'a pas pu être enregistré.");
 
-  const removeDraft = async (d) => {
-    const ok = await run(() => deleteDossier(d.id), "Le brouillon n'a pas pu être supprimé.");
-    if (ok && draft.id === d.id) setDraft((x) => ({ ...x, id: null }));
+  const removeDossier = async (d) => {
+    const ok = await run(
+      () => deleteDossier(d.id),
+      d.isDraft ? "Le brouillon n'a pas pu être supprimé." : "Le dossier n'a pas pu être supprimé."
+    );
+    if (!ok) return;
+    if (draft.id === d.id) setDraft((x) => ({ ...x, id: null }));
+    // si ce dossier était en cours de modification, la saisie devient une nouvelle demande
+    if (draft.editing && draft.editing.id === d.id) setDraft((x) => ({ ...x, editing: null }));
+  };
+
+  const edit = (d) => {
+    const go = () => {
+      setDraft(dossierToDraft(d));
+      setView("new");
+      window.scrollTo({ top: 0 });
+    };
+    draft.editing && draft.editing.id === d.id ? (setView("new"), window.scrollTo({ top: 0 })) : guard(go);
   };
 
   const newRequest = () => guard(() => setDraft(emptyDraft()));
@@ -212,7 +233,7 @@ export default function App() {
         {view === "history" && (
           <History dossiers={dossiers} loading={loadingDb} highlight={highlight} onRelaunch={relaunch}
             onNew={() => setView("new")} onResume={resume} ask={ask}
-            onSaveTracking={saveTrackingFor} onDelete={removeDraft} />
+            onSaveTracking={saveTrackingFor} onDelete={removeDossier} onEdit={edit} />
         )}
         {view === "addr" && <Addresses />}
       </main>
