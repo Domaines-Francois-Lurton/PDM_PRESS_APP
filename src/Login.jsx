@@ -19,7 +19,7 @@ export default function Login() {
   return (
     <main className="login">
       <form className="login-card" onSubmit={submit}>
-        <h1>Échantillons Presse</h1>
+        <h1>PDM Presse</h1>
         <p className="muted">Préparer les envois de vins à Wine Spectator et Wine Enthusiast.</p>
         <label className="field">
           <span>Mot de passe</span>

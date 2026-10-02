@@ -148,8 +148,7 @@ function PdmLabel({ pdm, compact }) {
       </header>
       <div className="label-from">
         <span className="k">Préparé par</span>
-        <span className="v">{fil.nom}</span>
-        <span className="s">{fil.pays}</span>
+        <span className="v">{fil.prepa}</span>
         <span className="route-pill">
           <svg viewBox="0 0 24 10" width="20" height="10" aria-hidden="true"><path d="M0 5h21M16 1l5 4-5 4" fill="none" stroke="currentColor" strokeWidth="1.5" /></svg>
           {ROUTE_COURT[rk]}

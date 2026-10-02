@@ -12,10 +12,11 @@ const ORIGINES = ["France", "Espagne", "Argentine", "Chili"];
 
 // Filiale qui reçoit la PDM et prépare les échantillons
 const FILIALES = {
-  France: { nom: "Logistique France", pays: "France", langue: "fr", envoiUS: "transitaire" },
-  Espagne: { nom: "Bodegas Campo Eliseo", pays: "Espagne", langue: "es", envoiUS: "transitaire" },
-  Argentine: { nom: "Bodega Piedra Negra", pays: "Argentine", langue: "es", envoiUS: "direct" },
-  Chili: { nom: "Hacienda Araucano", pays: "Chili", langue: "es", envoiUS: "direct" },
+// prepa : affiché après « Préparé par » sur les étiquettes PDM
+  France: { nom: "Logistique France", prepa: "ADV François Lurton", pays: "France", langue: "fr", envoiUS: "transitaire" },
+  Espagne: { nom: "Bodegas Campo Eliseo", prepa: "ADV Bodegas Campo Eliseo", pays: "Espagne", langue: "es", envoiUS: "transitaire" },
+  Argentine: { nom: "Bodega Piedra Negra", prepa: "ADV Bodega Piedra Negra", pays: "Argentine", langue: "es", envoiUS: "direct" },
+  Chili: { nom: "Hacienda Araucano", prepa: "ADV Hacienda Araucano", pays: "Chili", langue: "es", envoiUS: "direct" },
 };
 
 const CRITIQUES = {
@@ -73,6 +74,35 @@ const WE_REGIONS = {
   Rueda: ["WE_HQ", "Reggie Solomon"],
   Mendoza: ["WE_HQ", "Jesica Vargas"],
   Colchagua: ["WE_HQ", "Jesica Vargas"],
+  // Autres régions notées par WE, hors portefeuille (FAQ WE août 2026, pages 6, 10 et 11)
+  Bordeaux: ["WE_VOSS", "Roger Voss"],
+  Corse: ["WE_VOSS", "Roger Voss"],
+  Alsace: ["WE_HQ", "Aleks Zecevic"],
+  "Jura, Savoie": ["WE_HQ", "Aleks Zecevic"],
+  Bourgogne: ["WE_HQ", "Anna-Christina Cabrales"],
+  Champagne: ["WE_HQ", "Anna-Christina Cabrales"],
+  "Vallée du Rhône": ["WE_HQ", "Anna-Christina Cabrales"],
+  Beaujolais: ["WE_HQ", "Reggie Solomon"],
+  "Vallée de la Loire": ["WE_HQ", "Reggie Solomon"],
+  Bandol: ["WE_HQ", "Cody Wexler"],
+  "Méditerranée": ["WE_HQ", "Cody Wexler"],
+  "Autre région de France": ["WE_HQ", "Cody Wexler"],
+  "Ribera del Duero": ["WE_SUMNERS", "John Sumners"],
+  "La Rioja": ["WE_SUMNERS", "John Sumners"],
+  Navarre: ["WE_SUMNERS", "John Sumners"],
+  "Aragon": ["WE_SUMNERS", "John Sumners"],
+  Catalogne: ["WE_SUMNERS", "John Sumners"],
+  "Pays basque": ["WE_SUMNERS", "John Sumners"],
+  "Cava (toutes zones)": ["WE_SUMNERS", "John Sumners"],
+  "Castille-et-León (hors Toro, Ribera del Duero)": ["WE_HQ", "Reggie Solomon"],
+  "Castille-La Manche": ["WE_HQ", "Reggie Solomon"],
+  Andalousie: ["WE_HQ", "Reggie Solomon"],
+  "Estrémadure": ["WE_HQ", "Reggie Solomon"],
+  Galice: ["WE_HQ", "Reggie Solomon"],
+  Madrid: ["WE_HQ", "Reggie Solomon"],
+  Murcie: ["WE_HQ", "Reggie Solomon"],
+  Valence: ["WE_HQ", "Reggie Solomon"],
+  "Îles (Baléares, Canaries)": ["WE_HQ", "Reggie Solomon"],
 };
 
 function route(wine, critique) {
@@ -342,52 +372,13 @@ function dossierStatut(d) {
   return { label: "En préparation", tone: "neutral" };
 }
 
-// Reconstruit l'état de l'assistant à partir d'un dossier enregistré (pour le modifier).
-// Source de vérité : les PDM et les vins bloqués du dossier (le suivi des colis y est à jour).
-function dossierToDraft(d) {
-  const items = [...(d.pdms || []).flatMap((p) => p.items || []), ...(d.blocked || [])].filter((it) => CAT[it.wineId]);
-  const lines = [];
-  const seen = {};
-  items.forEach((it) => {
-    if (seen[it.uid]) return;
-    seen[it.uid] = true;
-    lines.push({ uid: it.uid, wineId: it.wineId, vintage: it.vintage || "", comment: it.comment || "" });
-  });
-  if (Array.isArray(d.lineOrder)) {
-    const pos = Object.fromEntries(d.lineOrder.map((u, i) => [u, i]));
-    lines.sort((a, b) => (pos[a.uid] ?? 1e9) - (pos[b.uid] ?? 1e9));
-  }
-  const critiques = { WS: items.some((i) => i.critique === "WS"), WE: items.some((i) => i.critique === "WE") };
-  const excl = {};
-  lines.forEach((l) =>
-    ["WS", "WE"].forEach((c) => {
-      if (critiques[c] && !items.some((i) => i.uid === l.uid && i.critique === c)) excl[l.uid + "|" + c] = true;
-    })
-  );
-  const cola = {};
-  (d.pdms || []).forEach((p) => {
-    if (DESTINATIONS[p.dest] && DESTINATIONS[p.dest].zone === "US") (p.items || []).forEach((i) => (cola[i.uid] = "oui"));
-  });
-  (d.blocked || []).forEach((b) => (cola[b.uid] = "non"));
-  const tracking = Object.fromEntries((d.pdms || []).map((p) => [p.id, p.tracking || { carrier: "", number: "", date: "" }]));
-  const [prenom, ...rest] = (d.createdBy || "").split(" ");
-  return {
-    ...emptyDraft(),
-    prenom: prenom || "", nom: rest.join(" "),
-    origines: [...new Set(lines.map((l) => CAT[l.wineId].f))],
-    lines, critiques, excl, cola, check: d.check || {}, tracking,
-    step: 1, max: 8,
-    editing: { id: d.id, createdAt: d.createdAt, createdBy: d.createdBy || "", relanceId: d.relanceId || null },
-  };
-}
-
 function uid() {
   return "l" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
 function emptyDraft() {
   return {
-    id: null, prenom: "", nom: "", relance: null, editing: null,
+    id: null, prenom: "", nom: "", relance: null,
     step: 1, max: 1, origines: [], lines: [],
     critiques: { WS: false, WE: false }, excl: {}, cola: {}, check: {}, langs: {}, tracking: {},
   };
@@ -422,5 +413,4 @@ export {
   dossierStatut,
   uid,
   emptyDraft,
-  dossierToDraft,
 };

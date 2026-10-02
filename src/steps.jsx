@@ -374,9 +374,12 @@ function orgaRules(c, ctx) {
       : ctx.southAm ? ", nombre de caisses importées (obligatoire pour le Chili et l'Argentine)" : "";
     return {
       avant: [
-        ["ws_form", `Formulaire d'information envoyé à napatastings@mshanken.com : prix de vente conseillé, production en caisses, date de sortie${caisses}`],
+        ["ws_form", <>
+          Envoyés à napatastings@mshanken.com :
+          <span className="sub-item">Formulaire d'information : prix de vente conseillé, production en caisses, date de sortie{caisses}</span>
+          <span className="sub-item">Photo de l'étiquette : taille réelle, 330 dpi minimum, jpg, millésime exact</span>
+        </>],
         ["ws_ok", "Pré-approbation reçue de Wine Spectator pour chaque vin"],
-        ["ws_label", "Photo de l'étiquette envoyée : taille réelle, 330 dpi minimum, jpg, millésime exact"],
       ],
       savoir: [
         "Pas de frais de dégustation. 2 bouteilles par vin, quel que soit le bouchage.",
@@ -386,9 +389,6 @@ function orgaRules(c, ctx) {
       ],
     };
   }
-  const fee = !ctx
-    ? "Frais de traitement réglés : 95 $ par référence"
-    : `Frais de traitement réglés : ${ctx.weSkus} référence${ctx.weSkus > 1 ? "s" : ""} × 95 $ = ${(ctx.weSkus * 95).toLocaleString("fr-FR")} $`;
   const savoir = [
     "Les frais ne sont pas remboursés en cas de refus : étiquette illisible ou non approuvée TTB, échantillon de cuve, doublon.",
     "Si un échantillon est bouchonné, WE demande une deuxième bouteille, sans remboursement.",
@@ -398,7 +398,6 @@ function orgaRules(c, ctx) {
   return {
     avant: [
       ["we_rp", "Chaque référence saisie sur la Ratings Platform (ratingsplatform.wineenthusiast.com)"],
-      ["we_fee", fee],
       ["we_qr", "Fiches QR code (Shipment Barcode) imprimées et jointes aux mails de PDM"],
     ],
     savoir,
@@ -427,11 +426,10 @@ function Step5({ draft, set }) {
   const [tab, setTab] = useState(active[0]);
   const cur = active.includes(tab) ? tab : active[0];
   if (!active.length) return <p className="empty">Aucun envoi possible : revenez aux étapes précédentes.</p>;
-  const weSkus = new Set(pdms.filter((p) => p.critique === "WE").flatMap((p) => p.items.map((i) => i.uid))).size;
   const hasSpirits = pdms.some((p) => p.dest === "WE_NEWMAN");
   const southAm = pdms.some((p) => p.critique === "WS" && (p.filiale === "Chili" || p.filiale === "Argentine"));
   const destIds = [...new Set(pdms.filter((p) => p.critique === cur).map((p) => p.dest))];
-  const rules = orgaRules(cur, { weSkus, hasSpirits, southAm });
+  const rules = orgaRules(cur, { hasSpirits, southAm });
 
   return (
     <div>
@@ -575,7 +573,7 @@ function Step7({ draft, set }) {
             <div className="track-id">
               <span className="label-num small">PDM{p.num}</span>
               <div>
-                <div className="cat-ref">{FILIALES[p.filiale].nom} vers {DESTINATIONS[p.dest].titre}</div>
+                <div className="cat-ref">{FILIALES[p.filiale].prepa} vers {DESTINATIONS[p.dest].titre}</div>
                 <div className="cat-app">{p.items.length} vin{p.items.length > 1 ? "s" : ""}, {CRITIQUES[p.critique].nom}</div>
               </div>
             </div>

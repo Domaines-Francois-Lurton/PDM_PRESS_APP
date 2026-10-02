@@ -31,7 +31,8 @@
   --line: #2E3A36; --line-strong: #5D6B66; --green: #74B7A0; --green-ink: #0E1C17; --green-soft: #1D3129;
   --wine: #E3909E; --wine-soft: #3A1E25; --amber: #E2B462; --amber-soft: #372B15; --focus: #7FAAF5;
 }
-html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+/* Barre de défilement toujours présente : pas de saut de largeur entre une page courte et une page longue */
+html { scroll-padding-top: env(safe-area-inset-top, 0px); overflow-y: scroll; }
 *, *::before, *::after { box-sizing: inherit; }
 body {
   margin: 0; background: var(--bg); color: var(--ink);
@@ -53,13 +54,14 @@ button, input, select { font: inherit; color: inherit; }
 .count { display: inline-block; min-width: 1.5em; padding: 0 .4em; margin-left: .35rem; border-radius: 99px; background: var(--surface-2); border: 1px solid var(--line); font-size: .78rem; font-weight: 600; text-align: center; }
 
 /* boutons */
-.btn { border: 1px solid var(--line-strong); background: var(--surface); padding: .55rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 500; }
+/* Deux hauteurs pour tous les éléments cliquables et champs : 40px (standard) et 32px (petit) */
+.btn { display: inline-flex; align-items: center; justify-content: center; height: 40px; border: 1px solid var(--line-strong); background: var(--surface); padding: 0 1rem; border-radius: 6px; cursor: pointer; font-weight: 500; }
 .btn:hover:not(:disabled) { background: var(--surface-2); }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
 .btn-primary { background: var(--green); border-color: var(--green); color: var(--green-ink); }
 .btn-primary:hover:not(:disabled) { background: var(--green); filter: brightness(1.1); }
-.btn-small { padding: .3rem .7rem; font-size: .85rem; white-space: nowrap; }
-a.btn { display: inline-block; text-decoration: none; }
+.btn-small { height: 32px; padding: 0 .7rem; font-size: .85rem; white-space: nowrap; }
+a.btn { text-decoration: none; }
 .link-btn { background: none; border: 0; padding: 0; color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; font-size: .88rem; }
 .link-btn:hover { color: var(--ink); }
 
@@ -70,8 +72,10 @@ a.btn { display: inline-block; text-decoration: none; }
 .brand { display: flex; flex-direction: column; line-height: 1.15; }
 .brand-name { font-weight: 700; font-size: 1.05rem; }
 .brand-sub { color: var(--ink-2); font-size: .8rem; }
+/* Même largeur que la colonne des étapes (.wizard) : le menu s'aligne sur le bloc blanc */
+@media (min-width: 901px) { .brand { width: 220px; flex-shrink: 0; } }
 .nav { display: flex; gap: .25rem; flex: 1; }
-.nav-btn { background: none; border: 0; padding: .45rem .8rem; border-radius: 6px; cursor: pointer; color: var(--ink-2); font-weight: 500; }
+.nav-btn { white-space: nowrap; background: none; border: 0; padding: .45rem .8rem; border-radius: 6px; cursor: pointer; color: var(--ink-2); font-weight: 500; }
 .nav-btn:hover { color: var(--ink); background: var(--surface-2); }
 .nav-btn.on { color: var(--ink); background: var(--green-soft); }
 .who { display: flex; gap: .9rem; align-items: center; font-size: .9rem; }
@@ -86,7 +90,7 @@ a.btn { display: inline-block; text-decoration: none; }
 
 /* champs */
 .field { display: flex; flex-direction: column; gap: .25rem; font-size: .82rem; color: var(--ink-2); font-weight: 500; }
-.field input, .field select, .search { border: 1px solid var(--line-strong); background: var(--surface); border-radius: 6px; padding: .5rem .65rem; font-size: .95rem; color: var(--ink); min-width: 0; }
+.field input, .field select, .search { height: 40px; max-width: 100%; border: 1px solid var(--line-strong); background: var(--surface); border-radius: 6px; padding: 0 .65rem; font-size: .95rem; color: var(--ink); min-width: 0; }
 .field input.need { border-color: var(--amber); background: var(--amber-soft); }
 .field-inline input { width: 6.5rem; }
 .field-grow { flex: 1; }
@@ -117,7 +121,7 @@ a.btn { display: inline-block; text-decoration: none; }
 .who-fields .field { flex: 1; min-width: 180px; max-width: 280px; }
 .recent { margin-top: 1.4rem; }
 .recent .chips { margin-top: .4rem; }
-.chip-small { padding: .3rem .85rem; font-size: .88rem; }
+.chip-small { height: 32px; padding: 0 .85rem; font-size: .88rem; }
 .badge-draft { border: 1px dashed var(--line-strong); color: var(--ink-2); }
 .h-foot .link-btn { margin-right: auto; }
 
@@ -130,7 +134,7 @@ a.btn { display: inline-block; text-decoration: none; }
 
 /* étape 1 */
 .chips { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .6rem; }
-.chip { border: 1.5px solid var(--line-strong); background: var(--surface); padding: .5rem 1.1rem; border-radius: 99px; cursor: pointer; font-weight: 500; }
+.chip { height: 40px; border: 1.5px solid var(--line-strong); background: var(--surface); padding: 0 1.1rem; border-radius: 99px; cursor: pointer; font-weight: 500; }
 .chip.on { background: var(--green); border-color: var(--green); color: var(--green-ink); }
 .split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.5rem; margin-top: .5rem; }
 .cat-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
@@ -204,8 +208,8 @@ a.btn { display: inline-block; text-decoration: none; }
 .cola-row.is-no { border-color: var(--wine); background: var(--wine-soft); }
 .imp { color: var(--ink); font-weight: 600; }
 .imp-none { color: var(--amber); font-weight: 500; }
-.seg { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 6px; overflow: hidden; flex: none; }
-.seg-btn { background: var(--surface); border: 0; padding: .4rem .95rem; cursor: pointer; font-weight: 500; font-size: .9rem; }
+.seg { display: inline-flex; height: 40px; border: 1px solid var(--line-strong); border-radius: 6px; overflow: hidden; flex: none; }
+.seg-btn { background: var(--surface); border: 0; padding: 0 .95rem; cursor: pointer; font-weight: 500; font-size: .9rem; }
 .seg-btn + .seg-btn { border-left: 1px solid var(--line-strong); }
 .seg-btn.on { background: var(--ink); color: var(--surface); }
 .seg-btn.on.tone-green { background: var(--green); color: var(--green-ink); }
@@ -226,9 +230,11 @@ a.btn { display: inline-block; text-decoration: none; }
 .tab { background: none; border: 0; border-bottom: 2.5px solid transparent; padding: .55rem .9rem; cursor: pointer; font-weight: 500; color: var(--ink-2); margin-bottom: -1px; }
 .tab.on { color: var(--ink); border-bottom-color: var(--green); }
 .consignes { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 2rem; }
+.sub-item { display: block; position: relative; padding-left: .9rem; margin-top: .2rem; }
+.sub-item::before { content: "–"; position: absolute; left: 0; }
 .checklist { list-style: none; padding: 0; margin: .5rem 0; display: flex; flex-direction: column; gap: .65rem; }
 .notes { margin: .5rem 0; padding-left: 1.1rem; color: var(--ink-2); font-size: .92rem; display: flex; flex-direction: column; gap: .4rem; }
-.dest-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: .8rem; margin-top: .6rem; }
+.dest-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: .8rem; margin-top: .6rem; align-items: start; }
 .dest-card { border: 1px solid var(--line); border-radius: 6px; padding: .8rem .9rem; background: var(--surface-2); }
 .dest-card ul { margin: .5rem 0 0; padding-left: 1.1rem; font-size: .86rem; display: flex; flex-direction: column; gap: .25rem; }
 .dest-card .routes { margin-top: .6rem; padding-top: .5rem; border-top: 1px solid var(--line); }
@@ -240,6 +246,25 @@ a.btn { display: inline-block; text-decoration: none; }
 .orga-facts dd { margin: .2rem 0 0; font-size: .92rem; overflow-wrap: anywhere; }
 .orga-facts a { color: var(--green); }
 .notes-ink { color: var(--ink); }
+/* « Proposer un vin, étape par étape » : frise verticale, même style que les étapes de l'assistant */
+.proc { list-style: none; margin: .6rem 0 0; padding: 0; position: relative; }
+.proc::before { content: ""; position: absolute; left: 13px; top: 14px; bottom: 14px; width: 1.5px; background: var(--line); }
+.proc-step { display: flex; gap: .9rem; align-items: flex-start; padding: .45rem 0; }
+.proc .st-n { position: relative; background: var(--green-soft); border-color: var(--green); color: var(--green); }
+.proc-body { flex: 1; min-width: 0; padding-top: .2rem; display: flex; flex-direction: column; align-items: flex-start; gap: .35rem; }
+.proc-body p { margin: 0; max-width: 70ch; }
+.proc-note { color: var(--amber); font-size: .85rem; font-weight: 600; }
+.proc-body .doc-card { align-self: stretch; margin-top: .1rem; }
+/* « Où envoyer ce vin ? » */
+.finder { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2); padding: 1rem 1.2rem; margin-top: 1.2rem; }
+.finder h3 { margin-top: 0; }
+.finder-fields .field { max-width: 100%; }
+.finder-fields { display: flex; flex-wrap: wrap; gap: .8rem 1rem; align-items: flex-end; margin: .6rem 0 .4rem; }
+.finder-result { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.2rem; margin-top: .8rem; align-items: start; }
+.finder-facts { margin: 0 0 .8rem; display: flex; flex-direction: column; gap: .5rem; }
+.finder-facts dt { font-size: .75rem; color: var(--ink-2); font-weight: 500; }
+.finder-facts dd { margin: 0; font-size: .92rem; }
+@media (max-width: 900px) { .finder-result { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 900px) { .orga-facts { grid-template-columns: minmax(0, 1fr); } }
 
 .doc-card { display: flex; align-items: center; gap: 1rem; border: 1px solid var(--line); border-radius: 6px; padding: .8rem .9rem; background: var(--surface-2); margin-top: .5rem; }
@@ -254,6 +279,7 @@ a.btn { display: inline-block; text-decoration: none; }
 .mails { display: flex; flex-direction: column; gap: 1.6rem; margin-top: 1.2rem; }
 .mail-bar { display: flex; justify-content: space-between; align-items: center; gap: .8rem; margin: .8rem 0 .4rem; flex-wrap: wrap; }
 .mail-actions { display: flex; gap: .5rem; }
+.mail-bar .seg { height: 32px; }
 .mail-subject { font-size: .92rem; padding: .5rem .8rem; border: 1px solid var(--line); border-bottom: 0; border-radius: 6px 6px 0 0; background: var(--surface-2); }
 .mail-subject .k { color: var(--ink-2); margin-right: .4rem; }
 .mail-body { margin: 0; padding: .9rem 1rem; border: 1px solid var(--line); border-radius: 0 0 6px 6px; font: .88rem/1.55 "Instrument Sans", system-ui, sans-serif; white-space: pre-wrap; max-height: 360px; overflow: auto; background: var(--surface); }
@@ -308,5 +334,3 @@ a.btn { display: inline-block; text-decoration: none; }
 .boot { min-height: 100vh; display: grid; place-items: center; color: var(--ink-2); }
 .banner { max-width: 1180px; margin: 1rem auto 0; padding: 0 1.5rem; }
 .banner .callout { margin: 0; display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; }
-.link-danger { color: var(--wine); }
-.link-danger:hover { color: var(--wine); }

@@ -65,16 +65,9 @@ function Wizard({ draft, setDraft, names, onSave, onSaveDraft, onNew, saving }) 
             Étape {s} sur {last}
             {draft.id && <span className="draft-flag">Brouillon</span>}
           </span>
-          {started && <button type="button" className="link-btn" onClick={onNew}>Nouvelle demande</button>}
+          {started && <button type="button" className="link-btn" onClick={onNew}>Recommencer</button>}
         </div>
         <h2 className="panel-title">{STEPS[s - 1]}</h2>
-        {draft.editing && (
-          <Callout tone="amber" title={"Modification du dossier du " + fmtDate(draft.editing.createdAt)}>
-            Toutes les étapes sont accessibles depuis la liste de gauche. À l'enregistrement, ce dossier remplace
-            l'ancien dans l'historique.{" "}
-            <button type="button" className="link-btn" onClick={onNew}>Annuler la modification</button>
-          </Callout>
-        )}
         {draft.relance && s <= 2 && (
           <Callout tone="green" title="Relance après obtention du COLA">
             {draft.relance.count > 1 ? `${draft.relance.count} vins repris` : "1 vin repris"} du dossier du {fmtDate(draft.relance.date)}, avec le COLA indiqué comme obtenu.
@@ -97,7 +90,7 @@ function Wizard({ draft, setDraft, names, onSave, onSaveDraft, onNew, saving }) 
             )}
             {s === last && (
               <button type="button" className="btn btn-primary" onClick={onSave} disabled={saving}>
-                {draft.editing ? "Enregistrer les modifications" : "Enregistrer le dossier"}
+                Enregistrer le dossier
               </button>
             )}
           </div>

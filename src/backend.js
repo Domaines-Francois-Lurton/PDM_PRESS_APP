@@ -66,8 +66,9 @@ export function saveFinalDossier(dossier, { replaceId, relanceFromId } = {}) {
   return batch.commit();
 }
 
-export function updateTracking(id, pdms) {
-  return updateDoc(doc(db, COL, id), { pdms, updatedAt: new Date().toISOString() });
+// Met à jour un dossier enregistré (suivi des colis, millésimes, préparation)
+export function updateDossier(id, patch) {
+  return updateDoc(doc(db, COL, id), { ...patch, updatedAt: new Date().toISOString() });
 }
 
 export function deleteDossier(id) {
