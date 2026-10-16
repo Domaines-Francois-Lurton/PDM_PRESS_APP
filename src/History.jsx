@@ -383,7 +383,13 @@ function History({ dossiers, loading, highlight, names, onRelaunch, onNew, onRes
         </Callout>
       )}
 
-      {shown.length === 0 && <p className="empty">Aucun dossier ne correspond à la recherche.</p>}
+      {shown.length === 0 && (
+        <p className="empty">
+          {total === 0
+            ? `Aucun dossier en cours : ${dossiers.length} supprimé${dossiers.length > 1 ? "s" : ""}, visible${dossiers.length > 1 ? "s" : ""} avec « Afficher les supprimés ».`
+            : "Aucun dossier ne correspond à la recherche."}
+        </p>
+      )}
       {shown.map((d) => (d.deletedAt ? renderDeleted(d) : d.isDraft ? renderDraft(d) : renderDossier(d)))}
     </div>
   );
