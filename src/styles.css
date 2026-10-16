@@ -84,9 +84,51 @@ a.btn { text-decoration: none; }
 .bottom-in { justify-content: space-between; gap: 1rem; }
 
 /* login */
-.login { min-height: 100vh; display: grid; place-items: center; padding: 1.5rem; }
-.login-card { width: min(400px, 100%); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 2rem; display: flex; flex-direction: column; gap: .9rem; }
-.login-card h1 { font-size: 1.5rem; }
+/* Connexion : reprise de la page de l'app « Dépôts de marques » (carte en deux panneaux, Figtree),
+   aux couleurs PDM Presse du Portail (violet). Toujours en clair (logo noir). Le reste de l'app reste vert. */
+.cx { --cx-app: linear-gradient(160deg, oklch(0.66 0.16 294), oklch(0.52 0.18 300)); --cx-ink: #1b1a24; --cx-muted: #6b6860; --cx-line: #d9d5cc; --cx-error: #b0362f;
+  min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 32px;
+  font-family: Figtree, system-ui, sans-serif; color: var(--cx-ink); background: #FAF9F7; color-scheme: light; }
+.cx-card { width: 100%; max-width: 700px; min-height: 425px; background: #fff; border-radius: 15px; overflow: hidden;
+  display: grid; grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+  box-shadow: 0 2px 4px rgba(27, 26, 36, .04), 0 12px 24px rgba(27, 26, 36, .08), 0 32px 64px rgba(27, 26, 36, .10); }
+.cx-brand { background: var(--cx-app); color: #fff; padding: 34px; display: flex; flex-direction: column; }
+.cx-badge { width: 48px; height: 48px; border-radius: 13px; background: rgba(255, 255, 255, .18); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 17px; }
+.cx-name { margin: auto 0 0; font-size: 26px; font-weight: 700; line-height: 1.1; letter-spacing: -.01em; }
+.cx-tagline { margin: 7px 0 0; font-size: 14px; }
+.cx-side { padding: 41px 44px; display: flex; flex-direction: column; justify-content: center; }
+.cx-logo { height: 58px; align-self: center; }
+.cx-sep { width: 100%; margin: 34px 0 31px; border: 0; border-top: 1px solid #ece9e3; }
+.cx form { margin: 0; display: flex; flex-direction: column; }
+.cx h2 { margin: 0; font-size: 19px; font-weight: 600; letter-spacing: 0; }
+.cx label { margin-top: 20px; font-size: 12px; font-weight: 500; color: #4a4740; }
+.cx-field { margin-top: 7px; display: flex; align-items: center; gap: 8px; height: 41px; padding: 0 5px 0 12px; border: 1px solid var(--cx-line); border-radius: 9px; background: #fff; }
+.cx-field:focus-within { border-color: var(--cx-ink); }
+.cx-field input { flex: 1; min-width: 0; border: 0; outline: 0; font: inherit; font-size: 14px; background: transparent; color: var(--cx-ink); }
+.cx-toggle { border: 0; background: transparent; font: inherit; font-size: 12px; font-weight: 500; color: var(--cx-muted); cursor: pointer; padding: 6px 8px; border-radius: 6px; }
+.cx-toggle:hover { background: #f2f0eb; }
+.cx-error { margin-top: 8px; font-size: 12px; color: var(--cx-error); }
+.cx form.has-error .cx-field { border: 1.5px solid #c8423a; background: #fdf6f5; }
+.cx-submit { margin-top: 15px; height: 41px; border: 0; border-radius: 9px; background: var(--cx-ink); color: #fff; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.cx-submit:hover:not(:disabled) { background: #2e2c3a; }
+.cx-submit:disabled { opacity: .6; cursor: progress; }
+@media (max-width: 700px) {
+  .cx { padding: 0; align-items: stretch; background: #fff; }
+  .cx-card { display: flex; flex-direction: column; max-width: none; min-height: 100vh; border-radius: 0; box-shadow: none; }
+  .cx-brand { padding: 56px 24px 28px; border-radius: 0 0 24px 24px; }
+  .cx-badge { width: 56px; height: 56px; border-radius: 15px; font-size: 20px; }
+  .cx-name { margin-top: 28px; font-size: 28px; }
+  .cx-tagline { margin-top: 6px; font-size: 16px; }
+  .cx-side { flex: 1; padding: 32px 24px 36px; justify-content: flex-start; }
+  .cx label { font-size: 14px; }
+  .cx-field { height: 52px; border-radius: 12px; padding: 0 4px 0 14px; }
+  .cx-field input { font-size: 16px; }
+  .cx-toggle { min-width: 76px; height: 44px; font-size: 14px; }
+  .cx-error { font-size: 14px; }
+  .cx-submit { margin-top: 20px; height: 52px; border-radius: 12px; font-size: 16px; }
+  .cx-logo { height: 52px; }
+  .cx-sep { margin: 28px 0 24px; }
+}
 
 /* champs */
 .field { display: flex; flex-direction: column; gap: .25rem; font-size: .82rem; color: var(--ink-2); font-weight: 500; }
@@ -300,7 +342,18 @@ a.btn { text-decoration: none; }
 .h-pdm { font-weight: 600; white-space: nowrap; }
 .h-badges { display: flex; gap: .4rem; flex-wrap: wrap; justify-content: flex-end; }
 .h-body { padding: 0 1.1rem 1.1rem; display: flex; flex-direction: column; gap: .7rem; }
-.h-foot { display: flex; justify-content: flex-end; align-items: center; gap: 1rem; }
+.h-foot { display: flex; justify-content: flex-end; align-items: flex-end; gap: .6rem 1rem; flex-wrap: wrap; }
+.h-foot .foot-msg, .h-foot .link-btn { align-self: center; }
+.h-who input { width: 14rem; }
+/* historique : recherche, filtres, export, « À suivre », dossiers supprimés */
+.h-tools { padding: 1rem 1.2rem; display: flex; flex-direction: column; gap: .7rem; }
+.h-tools-row { display: flex; flex-wrap: wrap; gap: .7rem 1rem; align-items: flex-end; }
+.h-tools .search { flex: 1; min-width: 220px; max-width: none; }
+.h-tools .cb { align-self: center; }
+.h-tools-foot { justify-content: space-between; align-items: center; }
+.h-export { display: flex; gap: .5rem; flex-wrap: wrap; }
+.a-suivre { margin: .3rem 0 .6rem; padding-left: 1.1rem; display: flex; flex-direction: column; gap: .25rem; }
+.h-deleted { opacity: .7; }
 .badge { font-size: .78rem; font-weight: 600; padding: .18rem .6rem; border-radius: 99px; white-space: nowrap; }
 .badge-neutral { background: var(--surface-2); border: 1px solid var(--line-strong); }
 .badge-green { background: var(--green-soft); color: var(--green); }

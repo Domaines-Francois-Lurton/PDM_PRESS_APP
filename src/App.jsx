@@ -6,7 +6,7 @@ import Wizard from "./Wizard.jsx";
 import History from "./History.jsx";
 import Addresses from "./Consignes.jsx";
 import {
-  watchAuth, logout, subscribeDossiers, saveDraftDoc, saveFinalDossier, updateDossier, deleteDossier,
+  watchAuth, logout, subscribeDossiers, saveDraftDoc, saveFinalDossier, updateDossier,
 } from "./backend.js";
 
 // La demande en cours de saisie (pas encore enregistrée) reste dans le navigateur,
@@ -84,7 +84,8 @@ export default function App() {
     }
   };
 
-  const names = [...new Set(dossiers.map((d) => d.createdBy).filter(Boolean))];
+  // Noms déjà utilisés : demandeurs et auteurs de modifications
+  const names = [...new Set(dossiers.flatMap((d) => [d.createdBy, ...(d.modifs || []).map((m) => m.by)]).filter(Boolean))];
   const hasWork = draft.lines.length > 0 || requesterName(draft);
   const ask = (opts) => setConfirmState(opts);
   const guard = (action) => {
@@ -130,12 +131,24 @@ export default function App() {
 
   const saveDossierFor = (d, patch) => run(() => updateDossier(d.id, patch), "Les modifications n'ont pas pu être enregistrées.");
 
-  const removeDossier = (d) => run(() => deleteDossier(d.id), "Le dossier n'a pas pu être supprimé.");
+  // Suppression « douce » : le dossier est masqué (deletedAt, deletedBy) mais reste restaurable.
+  // Pour un dossier final, la suppression et la restauration sont aussi notées dans son journal.
+  const journal = (d, by, quoi) => (d.isDraft ? {} : { modifs: [...(d.modifs || []), { date: new Date().toISOString(), by, quoi }] });
 
-  const removeDraft = async (d) => {
-    const ok = await run(() => deleteDossier(d.id), "Le brouillon n'a pas pu être supprimé.");
+  const removeDossier = (d, by) => run(
+    () => updateDossier(d.id, { deletedAt: new Date().toISOString(), deletedBy: by, ...journal(d, by, "Dossier supprimé") }),
+    d.isDraft ? "Le brouillon n'a pas pu être supprimé." : "Le dossier n'a pas pu être supprimé."
+  );
+
+  const removeDraft = async (d, by) => {
+    const ok = await removeDossier(d, by);
     if (ok && draft.id === d.id) setDraft((x) => ({ ...x, id: null }));
   };
+
+  const restoreDossier = (d, by) => run(
+    () => updateDossier(d.id, { deletedAt: null, deletedBy: null, ...journal(d, by, "Dossier restauré") }),
+    "Le dossier n'a pas pu être restauré."
+  );
 
   const newRequest = () => guard(() => setDraft(emptyDraft()));
 
@@ -189,7 +202,7 @@ export default function App() {
                 aria-current={view === k ? "page" : undefined}
                 onClick={() => { setView(k); setHighlight(null); }}>
                 {l}
-                {k === "history" && !loadingDb && <span className="count">{dossiers.length}</span>}
+                {k === "history" && !loadingDb && <span className="count">{dossiers.filter((d) => !d.deletedAt).length}</span>}
               </button>
             ))}
           </nav>
@@ -212,9 +225,9 @@ export default function App() {
             onNew={newRequest} saving={saving} />
         )}
         {view === "history" && (
-          <History dossiers={dossiers} loading={loadingDb} highlight={highlight} onRelaunch={relaunch}
+          <History dossiers={dossiers} loading={loadingDb} highlight={highlight} names={names} onRelaunch={relaunch}
             onNew={() => setView("new")} onResume={resume} ask={ask}
-            onSaveDossier={saveDossierFor} onDelete={removeDraft} onDeleteDossier={removeDossier} />
+            onSaveDossier={saveDossierFor} onDelete={removeDraft} onDeleteDossier={removeDossier} onRestore={restoreDossier} />
         )}
         {view === "addr" && <Addresses onNew={() => setView("new")} />}
       </main>

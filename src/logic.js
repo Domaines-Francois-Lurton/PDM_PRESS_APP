@@ -372,6 +372,57 @@ function dossierStatut(d) {
   return { label: "En préparation", tone: "neutral" };
 }
 
+// ------------------------------------------------------------
+//  Historique : relances (« À suivre ») et export
+// ------------------------------------------------------------
+const SUIVI_DELAI_JOURS = 10; // une PDM sans numéro de suivi est signalée au-delà de ce délai
+
+// PDM sans numéro de suivi depuis plus de SUIVI_DELAI_JOURS, et vins en attente de COLA
+function aSuivre(dossiers, now = Date.now()) {
+  const sansSuivi = [];
+  const cola = [];
+  dossiers.filter((d) => !d.isDraft && !d.deletedAt).forEach((d) => {
+    const jours = Math.floor((now - new Date(d.createdAt).getTime()) / 864e5);
+    d.pdms.forEach((p) => {
+      if (!(p.tracking?.number || "").trim() && jours > SUIVI_DELAI_JOURS) sansSuivi.push({ d, p, jours });
+    });
+    d.blocked.forEach((b) => cola.push({ d, b }));
+  });
+  return { sansSuivi, cola };
+}
+
+// Historique au format CSV : une ligne par vin et par PDM, séparateur « ; » (Excel français)
+function historiqueCsv(dossiers) {
+  const cols = ["Date du dossier", "Demandeur", "Statut", "Supprimé", "Critique", "PDM", "Préparé par", "Destination",
+    "Vin", "Millésime", "Quantité", "Préparation", "Transporteur", "Numéro de suivi", "Date d'envoi", "Dernière modification"];
+  const day = (iso) => (iso ? iso.slice(0, 10) : "");
+  const name = (it) => (CAT[it.wineId] ? wineName(CAT[it.wineId]) : it.ref || "");
+  const rows = [];
+  dossiers.forEach((d) => {
+    const del = d.deletedAt ? `${day(d.deletedAt)} par ${d.deletedBy || "?"}` : "";
+    const last = d.modifs?.length ? d.modifs[d.modifs.length - 1] : null;
+    const modif = last ? `${day(last.date)} par ${last.by}` : "";
+    const base = [day(d.createdAt), d.createdBy || "", dossierStatut(d).label, del];
+    if (d.isDraft) {
+      const crit = ["WS", "WE"].filter((c) => d.draft.critiques[c]).join(" + ");
+      (d.draft.lines.length ? d.draft.lines : [{}]).forEach((l) =>
+        rows.push([...base, crit, "", "", "", name(l), l.vintage || "", "", l.comment || "", "", "", "", day(d.updatedAt)]));
+      return;
+    }
+    const row = (it, pdm, t = {}) => [...base, it.critique, pdm, FILIALES[it.filiale]?.prepa || it.filiale,
+      DESTINATIONS[it.dest]?.titre || it.dest, name(it), it.vintage || "", it.qty, it.comment || "",
+      t.carrier || "", t.number || "", t.date || "", modif];
+    d.pdms.forEach((p) => p.items.forEach((it) => rows.push(row(it, "PDM" + p.num, p.tracking))));
+    d.blocked.forEach((it) => rows.push(row(it, "COLA en attente")));
+  });
+  const cell = (v) => {
+    let s = String(v ?? "");
+    if (/^[=+\-@]/.test(s)) s = "'" + s; // évite qu'Excel interprète une cellule comme une formule
+    return /[;"\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  return "﻿" + [cols, ...rows].map((r) => r.map(cell).join(";")).join("\r\n");
+}
+
 function uid() {
   return "l" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
@@ -411,6 +462,9 @@ export {
   buildMail,
   requesterName,
   dossierStatut,
+  SUIVI_DELAI_JOURS,
+  aSuivre,
+  historiqueCsv,
   uid,
   emptyDraft,
 };

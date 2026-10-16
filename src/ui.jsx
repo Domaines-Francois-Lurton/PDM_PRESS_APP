@@ -23,6 +23,18 @@ async function copyText(text) {
 const fmtDate = (iso) =>
   new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 
+// Fait télécharger un fichier créé dans le navigateur (export de l'historique)
+function downloadFile(filename, content, type) {
+  const url = URL.createObjectURL(new Blob([content], { type }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 // ---------- petits composants
 function Badge({ tone = "neutral", children }) {
   return <span className={"badge badge-" + tone}>{children}</span>;
@@ -188,4 +200,4 @@ function PdmLabel({ pdm, compact }) {
   );
 }
 
-export { copyText, fmtDate, Badge, CritTag, Callout, Segmented, copyRich, CopyButton, ConfirmDialog, PdmLabel };
+export { copyText, fmtDate, downloadFile, Badge, CritTag, Callout, Segmented, copyRich, CopyButton, ConfirmDialog, PdmLabel };
